@@ -11,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -40,47 +40,8 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'owner' => 'boolean',
         'email_verified_at' => 'datetime',
     ];
-
-    public function resolveRouteBinding($value, $field = null)
-    {
-        return $this->where($field ?? 'id', $value)->withTrashed()->firstOrFail();
-    }
-
-    public function account()
-    {
-        return $this->belongsTo(Account::class);
-    }
-
-    public function getNameAttribute()
-    {
-        return $this->first_name.' '.$this->last_name;
-    }
-
-    public function setPasswordAttribute($password)
-    {
-        $this->attributes['password'] = Hash::needsRehash($password) ? Hash::make($password) : $password;
-    }
-
-    public function isDemoUser()
-    {
-        return $this->email === 'johndoe@example.com';
-    }
-
-    public function scopeOrderByName($query)
-    {
-        $query->orderBy('last_name')->orderBy('first_name');
-    }
-
-    public function scopeWhereRole($query, $role)
-    {
-        switch ($role) {
-            case 'user': return $query->where('owner', false);
-            case 'owner': return $query->where('owner', true);
-        }
-    }
 
     public function scopeFilter($query, array $filters)
     {
